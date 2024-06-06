@@ -30,6 +30,11 @@ Before you begin, ensure you have met the following requirements:
 - **PATCH /api/friend-requests/:id/accept**: Accept a friend request (requires authentication)
 - **DELETE /api/friend-requests/:id/deny**: Deny a friend request (requires authentication)
 
+### Chat Room
+
+- ** POST /api/chatrooms -- create room with new user
+- ** GET  /api/chatrooms -- show chatroom
+- ** POST /api/joinroom -- new join user can join in room
 
 ### Real-Time Messaging
 
