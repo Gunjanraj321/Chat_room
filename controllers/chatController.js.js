@@ -1,14 +1,11 @@
 const { Sequelize } = require("sequelize");
-const ChatRoom = require("../models/chatRoom");
+const ChatRoom = require("../models/Group");
 const User = require("../models/user");
-const UserChatRoom = require("../models/userChatRoom");
 
 const createRoom = async (req, res) => {
   try {
     const { roomName, membersId } = req.body;
-    // console.log(roomName, membersId);
     const userId = req.user.userId;
-    // console.log(userId);
     const user = await User.findOne({ where: { userId: userId } });
 
     if (!user.isPrimeMember) {

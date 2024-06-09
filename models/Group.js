@@ -12,11 +12,6 @@ const ChatRoom = sequelize.define("ChatRoom", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  capacity: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    defaultValue: 6,
-  },
   membersNo:{
     type:DataTypes.INTEGER,
     allowNull:false       

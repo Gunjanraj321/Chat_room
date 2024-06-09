@@ -1,7 +1,7 @@
 const {DataTypes} = require('sequelize');
 const sequelize = require('../utils/db');
 
-const UserChatRoom = sequelize.define('UserChatRoom',{
+const GroupMembers = sequelize.define('UserChatRoom',{
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -9,4 +9,4 @@ const UserChatRoom = sequelize.define('UserChatRoom',{
         allowNull:false
         },
 })
-module.exports = UserChatRoom;
+module.exports = GroupMembers;
