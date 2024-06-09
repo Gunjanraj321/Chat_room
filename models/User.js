@@ -2,21 +2,11 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../utils/db");
 
 const User = sequelize.define("User", {
-  userId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    primaryKey: true,
-    unique: true,
-  },
-  deviceId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  phone: {
+  email: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -32,5 +22,15 @@ const User = sequelize.define("User", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  imgUrl:{
+    type: DataTypes.STRING,
+    defaultValue:null,
+  },
+  about:{
+    type:DataTypes.STRING,
+    defaultValue:'Hey there I am using chathub',
+  },
 });
+
+
 module.exports = User;

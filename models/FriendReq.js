@@ -1,26 +1,15 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../utils/db'); 
+const { DataTypes } = require("sequelize");
+const sequelize = require("../utils/db");
 
-const FriendRequest = sequelize.define('FriendRequest', {
-  id: {
-    type: DataTypes.INTEGER,
-    defaultValue: DataTypes.UUIDV4,
-    primaryKey: true,
-  },
-  userId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  friendId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
+const FriendShip = sequelize.define("FriendRequest", {
   status: {
-    type: DataTypes.STRING,
+    type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
-}, {
-  timestamps: true,
+  receiverId:{
+    type:DataTypes.INTEGER,
+    allowNull: false
+  }
 });
 
-module.exports = FriendRequest;
+module.exports = FriendShip;

@@ -5,51 +5,61 @@ const jwt = require("jsonwebtoken");
 const SECRET_KEY = process.env.jwtSecret;
 
 const processSignUp = async (req, res) => {
-  const { userId, deviceId, name, phone, password } = req.body;
-  console.log(req.body);
+  const { name, email, password } = req.body;
+
   try {
-    let user = await User.findOne({ where: { userId } });
-    console.log(user);
+    let user = await User.findOne({ where: { email } });
+
     if (user) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    user = await User.create({ userId, deviceId, name, phone, password: hashedPassword, availCoins: 1000 });
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      availCoins: 1000,
+    });
 
-    res.status(201).json({ message: 'User registered successfully' });
+    const token = jwt.sign({ userId: newUser.id }, SECRET_KEY);
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      token: token,
+      userId: newUser.id,
+      email: email,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    return res.status(500).json({ message: "Server error", error });
   }
 };
-
 const processLogin = async (req, res) => {
-  const { userId, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    // Find user
-    const user = await User.findOne({ where: { userId } });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
-    // Generate JWT
-    const token = await jwt.sign({ userId: user.userId }, SECRET_KEY, { expiresIn: '1h' });
-
-    res.status(200).json({ token });
+    const token = jwt.sign({ userId: user.id }, SECRET_KEY, {
+      expiresIn: "1h",
+    });
+    return res
+      .status(200)
+      .json({ message: "login success", token, userId: user.id, email: email });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    return res.status(500).json({ message: "Server error", error });
   }
 };
-
 
 module.exports = {
   processSignUp,
-  processLogin
+  processLogin,
 };

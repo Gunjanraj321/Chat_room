@@ -1,83 +1,142 @@
+const { Op } = require("sequelize");
 const User = require("../models/user");
-const FriendRequest = require("../models/FriendReq");
+const FriendShip = require("../models/FriendReq");
 
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.findAll({
-      attributes: ["userId", "name", "phone"],
-    });
-    res.json(users);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "An error occurred while fetching users." });
-  }
-};
-
+// Send a friend request
 const sendFriendRequest = async (req, res) => {
-  const { friendId } = req.body;
-  const userId = req.user.userId;
-  if (!userId || !friendId) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
+  const receiverId = req.params.receiver_id;
+  const senderId = req.user.userId;
 
   try {
-    const existingRequest = await FriendRequest.findOne({
-      where: { userId, friendId },
+    const existingRequest = await FriendShip.findOne({
+      where: {
+        senderId,
+        receiverId,
+        status: false,
+      },
     });
-
     if (existingRequest) {
-      return res.status(409).json({ error: "Friend request already sent" });
+      return res.status(404).json({
+        message: "Friend request already sent",
+        status: existingRequest.status,
+      });
     }
 
-    const friendRequest = await FriendRequest.create({ userId, friendId });
-    res
-      .status(201)
-      .json({ message: "Friend request sent successfully", friendRequest });
+    await FriendShip.create({ senderId, receiverId });
+    return res.status(201).json({
+      message: "Friend request sent successfully",
+    });
   } catch (error) {
     console.error("Error sending friend request:", error);
-    res.status(500).json({ error: "An error occurred while sending friend request." });
+    res
+      .status(500)
+      .json({ error: "An error occurred while sending friend request." });
   }
 };
 
-const getNotifications = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const friendRequests = await FriendRequest.findAll({
-      where: { friendId: userId, status: false },
-    });
-    res.json(friendRequests);
-  } catch (error) {
-    console.error("Error fetching notifications:", error);
-    res.status(500).json({ error: "An error occurred while fetching notifications." });
-  }
-};
-
-const respondToFriendRequest = async (req, res) => {
-  const { requestId, action } = req.body;
-  const userId = req.user.userId;
+// Get friend request notifications
+const getAllFriendRequestNotifications = async (req, res) => {
+  const senderId = req.user.userId;
 
   try {
-    const friendRequest = await FriendRequest.findOne({
-      where: { id: requestId, friendId: userId, status: false },
+    const notifications = await FriendShip.findAll({
+      where: {
+        receiverId: senderId,
+        status: false,
+      },
+      attributes: {
+        exclude: ["createdAt", "updatedAt", "receiverId", "senderId"],
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "name", "email"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
     });
 
-    if (!friendRequest) {
-      return res.status(404).json({ error: "Friend request not found" });
-    }
+    const formattedNotifications = notifications.map((notification) => {
+      return {
+        id: notification.User.id,
+        name: notification.User.name,
+        email: notification.User.email,
+        status: notification.status,
+      };
+    });
 
-    if (action === 'accept') {
-      await friendRequest.update({ status: true });
-      res.json({ message: "Friend request accepted" });
-    } else if (action === 'deny') {
-      await friendRequest.destroy();
-      res.json({ message: "Friend request denied" });
-    } else {
-      res.status(400).json({ error: "Invalid action" });
-    }
+    return res.status(201).json(formattedNotifications);
   } catch (error) {
-    console.error("Error responding to friend request:", error);
-    res.status(500).json({ error: "An error occurred while responding to friend request." });
+    console.error("Error getting friend request notifications:", error);
+    res.status(500).json({
+      error: "An error occurred while getting friend request notifications.",
+    });
   }
 };
 
-module.exports = { getAllUsers, sendFriendRequest, getNotifications, respondToFriendRequest };
+const acceptFriendRequest = async (req, res) => {
+  const receiverId = req.user.userId;
+  const senderId = req.params.receiver_id;
+  try {
+    const userReq = await FriendShip.findOne({
+      where: { senderId: senderId, receiverId: receiverId, status: false },
+    });
+    if (!userReq) {
+      return res.status(404).json({ error: "Friend request not found." });
+    }
+    const [updatedRows] = await FriendShip.update(
+      { status: true },
+      {
+        where: {
+          senderId: senderId,
+          receiverId: receiverId,
+          status: false,
+        },
+      }
+    );
+    if (updatedRows === 0) {
+      return res.status(404).json({
+        error: "Friend request not found or already accepted.",
+      });
+    }
+    return res.status(200).json({ message: "Friend request accepted" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: "Error accepting friend request", error });
+  }
+};
+
+const declineFriendRequest = async (req, res) => {
+  const receiverId = req.user.userId;
+  const senderId = req.params.receiver_id;
+
+  try {
+    const userReq = await FriendShip.findOne({
+      where: { senderId: senderId, receiverId: receiverId, status: false },
+    });
+    if (!userReq) {
+      return res.status(404).json({ error: "Friend request not found." });
+    }
+
+    const affectedRow = await FriendShip.destroy({
+      where: { senderId: senderId, receiverId: receiverId, status: false },
+    });
+    if (affectedRow === 0) {
+      return res.status(404).json({ error: "Friend request not declined." });
+    }
+
+    res.status(200).json({ message: "Friend request declined" });
+  } catch (error) {
+    res.status(500).json({ message: "Error declining friend request", error });
+  }
+};
+
+
+
+module.exports = {
+  sendFriendRequest,
+  getAllFriendRequestNotifications,
+  acceptFriendRequest,
+  declineFriendRequest,
+};
