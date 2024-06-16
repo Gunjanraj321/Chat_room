@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../utils/db");
 
-const ChatRoom = sequelize.define("ChatRoom", {
+const Group = sequelize.define("Group", {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -18,4 +18,4 @@ const ChatRoom = sequelize.define("ChatRoom", {
 },
 });
 
-module.exports = ChatRoom;
+module.exports = Group;

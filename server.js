@@ -33,7 +33,9 @@ app.use((err, req, res, next) => {
 
 async function initiate() {
   try {
-    await sequelize.sync({force:false});
+    // await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+    const res = await sequelize.sync({force:false});   
+    // await sequelize.query("SET FOREIGN_KEY_CHECKS = 1"); 
     console.log("DB connected");
     server.listen(3001, () => {
       console.log(`Server Running at 3001`);

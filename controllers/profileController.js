@@ -124,7 +124,7 @@ const getFriendsList = async (req, res) => {
 const upgradePremium = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const user = await User.findOne({ where: { userId } });
+    const user = await User.findOne({ where: {id: userId } });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
